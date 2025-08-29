@@ -1,0 +1,15 @@
+{
+    "id": "archielite/hously",
+    "name": "Hously",
+    "namespace": "Theme\\Hously\\",
+    "description": "Hously - Laravel Real Estate Multilingual System",
+    "author": "Archi Elite",
+    "version": "1.0.0",
+    "required_plugins": [
+        "blog",
+        "contact",
+        "language",
+        "location",
+        "real-estate"
+    ]
+}

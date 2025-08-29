@@ -1,0 +1,26 @@
+/* =============================================================================
+   InvoicePlane
+   Custom Stylesheet
+
+   All changes made in this file will override the default styles in PDFs.
+   ========================================================================== */
+   
+   
+   header{
+       display:flex;
+   }
+   .w-full {width:100%;}
+   .heading-1 {
+       background:red;
+       display:flex;
+       flex-direction:row;
+       justify-content:space-between;
+   }
+   .heading {
+       width:fit-content;
+       background:blue;
+   }
+   #logo {
+       width:fit-content;
+   }
+   #invoice-logo{max-height:125px;text-align:right}

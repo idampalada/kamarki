@@ -1,0 +1,19 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import "custom/general";
+
+@import "components/buttons";
+
+@import "custom/structure/topnav";
+@import "custom/structure/footer";
+
+@import "custom/pages/helper";
+@import "custom/pages/hero";
+@import "custom/pages/testi";
+@import "custom/pages/choices";
+@import "custom/pages/countdown";
+@import "custom/pages/contact";
+
+@import "custom";

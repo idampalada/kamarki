@@ -1,0 +1,7 @@
+{
+    "name": "@theme/hously",
+    "version": "^1.0.0",
+    "dependencies": {
+        "tailwindcss": "^3.3.0"
+    }
+}

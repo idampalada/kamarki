@@ -1,0 +1,9 @@
+.footer {
+    .foot-subscribe {
+        input{
+            &::placeholder{
+                @apply text-gray-200;
+            }
+        }
+    }
+}
