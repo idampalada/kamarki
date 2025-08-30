@@ -189,7 +189,7 @@
 
                                 @if(RealestateHelper::isEnabledCustomFields())
                                     @foreach($property->customFields as $customField)
-                                        @if($customField->name != 'youtube_url' && Str::lower($customField->name) != 'video')
+                                        @if($customField->name != 'youtube_url')
                                             <li class="flex items-center justify-between mt-2">
                                                 <span class="text-sm text-slate-400">{!! BaseHelper::clean($customField->name) !!}</span>
                                                 <span class="text-sm font-medium">{!! BaseHelper::clean($customField->value) !!}</span>

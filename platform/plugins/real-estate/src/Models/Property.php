@@ -30,6 +30,8 @@ class Property extends BaseModel
         'content',
         'location',
         'images',
+        'videos',
+        'youtube_url',
         'project_id',
         'number_bedroom',
         'number_bathroom',
@@ -63,6 +65,7 @@ class Property extends BaseModel
         'location' => SafeContent::class,
         'expire_date' => 'datetime',
         'images' => 'json',
+        'videos' => 'json',
     ];
 
     protected static function boot(): void
@@ -96,6 +99,15 @@ class Property extends BaseModel
         return Attribute::make(
             get: function () {
                 return Arr::first($this->images) ?? null;
+            },
+        );
+    }
+
+        protected function video(): Attribute
+    {
+        return Attribute::make(
+            get: function () {
+                return Arr::first($this->videos) ?? null;
             },
         );
     }
@@ -209,6 +221,15 @@ class Property extends BaseModel
         return Attribute::make(
             get: function () {
                 return $this->image ? RvMedia::getImageUrl($this->image, 'small', false, RvMedia::getDefaultImage()) : null;
+            },
+        );
+    }
+
+        protected function videoThumb(): Attribute
+    {
+        return Attribute::make(
+            get: function () {
+                return $this->video ? RvMedia::getImageUrl($this->video, 'thumb', false, RvMedia::getDefaultImage()) : null;
             },
         );
     }

@@ -136,20 +136,40 @@ class PropertyForm extends FormAbstract
                 ],
             ])
             ->add('images[]', 'mediaImages', [
-                'label' => trans('plugins/real-estate::property.form.images'),
-                'label_attr' => ['class' => 'control-label'],
-                'values' => $this->getModel()->id ? $this->getModel()->images : [],
-            ]);
+    'label' => trans('plugins/real-estate::property.form.images'),
+    'label_attr' => ['class' => 'control-label'],
+    'values' => $this->getModel()->id ? $this->getModel()->images : [],
+])
+->add('videos', 'mediaFile', [
+    'label' => trans('plugins/real-estate::property.form.videos'),
+    'label_attr' => ['class' => 'control-label'],
+    'value' => $this->getModel()->id && $this->getModel()->videos ? 
+        implode(',', $this->getModel()->videos) : '',
+])
 
-        if (is_plugin_active('location')) {
-            $this->add('location_data', 'selectLocation', [
-                'label_attr' => ['class' => 'control-label'],
-                'wrapper' => [
-                    'class' => 'form-group mb-0 col-sm-4',
-                ],
-                'wrapperClassName' => 'row g-1',
-            ]);
-        }
+->add('youtube_url', 'text', [
+    'label' => 'YouTube Video URL',
+    'label_attr' => ['class' => 'control-label'],
+    'attr' => [
+        'placeholder' => 'https://www.youtube.com/watch?v=...',
+        'class' => 'form-control',
+    ],
+    'help_block' => [
+        'text' => 'Optional: Add YouTube video URL instead of uploading video file',
+        'tag' => 'p',
+        'attr' => ['class' => 'help-block text-muted'],
+    ],
+]);
+
+if (is_plugin_active('location')) {
+    $this->add('location_data', 'selectLocation', [
+        'label_attr' => ['class' => 'control-label'],
+        'wrapper' => [
+            'class' => 'form-group mb-0 col-sm-4',
+        ],
+        'wrapperClassName' => 'row g-1',
+    ]);
+}
 
         $this
             ->add('location', 'text', [

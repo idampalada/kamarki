@@ -14,6 +14,7 @@ class PropertyRequest extends Request
         return [
             'name' => 'required|string|max:220',
             'description' => 'nullable|string|max:400',
+            'videos' => 'nullable',
             'number_bedroom' => 'numeric|min:0|max:10000|nullable',
             'number_bathroom' => 'numeric|min:0|max:10000|nullable',
             'number_floor' => 'numeric|min:0|max:10000|nullable',

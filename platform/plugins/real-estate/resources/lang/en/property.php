@@ -10,6 +10,7 @@ return [
         'name' => 'Title',
         'type' => 'Type',
         'images' => 'Images',
+        'videos' => 'Videos',
         'location' => 'Property location',
         'number_bedroom' => 'Number bedrooms',
         'number_bathroom' => 'Number bathrooms',

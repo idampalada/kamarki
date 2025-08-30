@@ -59,6 +59,7 @@ class PropertyController extends BaseController
         $request->merge([
             'expire_date' => Carbon::now()->addDays(RealEstateHelper::propertyExpiredDays()),
             'images' => array_filter($request->input('images', [])),
+            'videos' => $this->processVideosInput($request->input('videos', '')),
             'author_type' => Account::class,
         ]);
 
@@ -85,6 +86,25 @@ class PropertyController extends BaseController
             ->setNextUrl(route('property.edit', $property->id))
             ->setMessage(trans('core/base::notices.create_success_message'));
     }
+    private function processVideosInput($input)
+{
+    if (is_array($input)) {
+        return array_filter($input);
+    }
+    
+    if (is_string($input) && !empty($input)) {
+        // Jika single file dari MediaFileField
+        if (strpos($input, ',') !== false) {
+            // Multiple files separated by comma
+            return array_filter(array_map('trim', explode(',', $input)));
+        } else {
+            // Single file
+            return [$input];
+        }
+    }
+    
+    return [];
+}
 
     public function edit(int|string $id, Request $request, FormBuilder $formBuilder)
     {
@@ -111,6 +131,17 @@ class PropertyController extends BaseController
 
         $property->author_type = Account::class;
         $property->images = array_filter($request->input('images', []));
+        $videosInput = $request->input('videos', '');
+if (is_string($videosInput) && !empty($videosInput)) {
+    // Jika input comma-separated string dari MediaFileField
+    $videosArray = array_map('trim', explode(',', $videosInput));
+    $property->videos = $this->processVideosInput($request->input('videos', ''));
+} elseif (is_array($videosInput)) {
+    // Jika input array dari form lain
+    $property->videos = array_filter($videosInput);
+} else {
+    $property->videos = [];
+}
         $property->moderation_status = $request->input('moderation_status');
         $property->never_expired = $request->input('never_expired');
 
