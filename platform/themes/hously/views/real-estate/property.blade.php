@@ -1,227 +1,218 @@
-@php
-    Theme::asset()->usePath()->add('leaflet-css', 'plugins/leaflet/leaflet.css');
-    Theme::asset()->container('footer')->usePath()->add('leaflet-js', 'plugins/leaflet/leaflet.js');
-    Theme::asset()->add('ckeditor-content-styles', 'vendor/core/core/base/libraries/ckeditor/content-styles.css');
+{{-- File: platform/themes/hously/views/real-estate/property.blade.php --}}
 
-    $relatedProperties = app(\Botble\RealEstate\Repositories\Interfaces\PropertyInterface::class)->getRelatedProperties(
-        $property->id,
-        (int) theme_option('number_of_related_properties', 6),
-        RealEstateHelper::getPropertyRelationsQuery(),
-        RealEstateHelper::getReviewExtraData()
-    );
-@endphp
+{{-- Jika masih ada error dengan layout, gunakan template sederhana ini --}}
+<!DOCTYPE html>
+<html lang="{{ app()->getLocale() }}">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ $property->name }}</title>
+    
+    {{-- Include CSS --}}
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdn.materialdesignicons.com/5.4.55/css/materialdesignicons.min.css" rel="stylesheet">
+    
+    <style>
+        /* Property Gallery Modal Styles */
+        #property-gallery-modal {
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+        }
+        
+        /* Modal Header */
+        #property-gallery-modal .absolute.top-0 {
+            background: linear-gradient(180deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 50%, transparent 100%);
+            padding: 1.5rem 1rem 3rem;
+        }
+        
+        /* Navigation Buttons */
+        #property-gallery-modal button[onclick*="navigate"] {
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(255,255,255,0.1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        #property-gallery-modal button[onclick*="navigate"]:hover {
+            background-color: rgba(0,0,0,0.7);
+            transform: scale(1.1);
+            border-color: rgba(255,255,255,0.2);
+        }
+        
+        /* Close Button */
+        #property-gallery-modal button[onclick="closePropertyGallery()"] {
+            transition: all 0.2s ease;
+            width: 2.5rem;
+            height: 2.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 0.5rem;
+            background-color: rgba(255,255,255,0.1);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+        }
+        
+        #property-gallery-modal button[onclick="closePropertyGallery()"]:hover {
+            background-color: rgba(255,255,255,0.2);
+            transform: scale(1.1);
+        }
+        
+        /* Gallery Content */
+        #gallery-content {
+            padding: 2rem;
+            max-width: calc(100vw - 8rem);
+            max-height: calc(100vh - 12rem);
+        }
+        
+        #gallery-content img {
+            border-radius: 0.5rem;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.8);
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+        
+        #gallery-content video {
+            border-radius: 0.5rem;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.8);
+            outline: none;
+        }
+        
+        #gallery-content iframe {
+            border-radius: 0.5rem;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.8);
+        }
+        
+        /* Button styles */
+        .btn {
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            font-weight: 500;
+            text-align: center;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        
+        .btn-icon {
+            width: 3rem;
+            height: 3rem;
+            padding: 0;
+        }
+        
+        .bg-primary {
+            background-color: #3b82f6;
+        }
+        
+        .bg-primary:hover {
+            background-color: #2563eb;
+        }
+        
+        .bg-secondary:hover {
+            background-color: #1d4ed8;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
 
-<section class="relative mt-28" data-property-id="{{ $property->id }}">
-    {!! Theme::partial('real-estate.properties.slider', ['item' => $property]) !!}
+<div class="min-h-screen">
+    {{-- Property Media Gallery --}}
+    <div class="relative">
+        {!! Theme::partial('real-estate.properties.slider', ['item' => $property]) !!}
+    </div>
 
-    <div class="container md:mt-16 mt-14">
-        <div class="md:flex">
-            <div class="px-3 lg:w-2/3 md:w-1/2 md:p-4">
-                <h4 class="text-2xl font-medium">{{ $property->name }}</h4>
-               <div class="flex flex-wrap gap-3 mt-2">
-                    @if ($property->city->name || $property->state->name)
-                       <p class="inline text-gray-500 dark:text-gray-400"><i class="mdi mdi-map-marker"></i>{{ $property->city->name }}{{ $property->city->name ? ', ' : '' }}{{ $property->state->name }}</p>
-                    @endif
-                    @if(setting('real_estate_display_views_count_in_detail_page', true))
-                        <p class="inline text-gray-500 dark:text-gray-400"><i class="px-1 mdi mdi-eye"></i>{{ __(':count views', ['count' => number_format($property->views)]) }}</p>
-                    @endif
-                   <p class="inline text-gray-500 dark:text-gray-400"><i class="px-1 mdi mdi-calendar"></i>{{ $property->created_at->translatedFormat('M d, Y')}}</p>
-                    @if(RealEstateHelper::isEnabledReview())
-                        @include(Theme::getThemeNamespace('views.real-estate.partials.review-star'), ['avgStar' => $property->reviews_avg_star, 'count' => $property->reviews_count])
-                    @endif
-               </div>
-                <ul class="flex items-center px-0 py-6 m-0 list-none">
-                    @if ($property->square)
-                        <li class="flex items-center lg:me-6 me-4">
-                            <i class="text-2xl text-primary mdi mdi-arrow-collapse-all me-2"></i>
-                            <span class="lg:text-xl">{{ $property->square_text }}</span>
-                        </li>
-                    @endif
-
-                    @if ($numberBeds = $property->number_bedroom)
-                        <li class="flex items-center lg:me-6 me-4">
-                            <i class="text-2xl mdi mdi-bed-double lg:text-3xl me-2 text-primary"></i>
-                            <span class="lg:text-xl">{{ __(':number Bed(s)', ['number' => $numberBeds]) }}</span>
-                        </li>
-                    @endif
-
-                    @if ($numberBathrooms = $property->number_bathroom)
-                        <li class="flex items-center">
-                            <i class="text-2xl text-primary mdi mdi-shower me-2"></i>
-                            <span class="lg:text-xl">{{ __(':number Bath(s)', ['number' => $numberBathrooms]) }}</span>
-                        </li>
-                    @endif
-                </ul>
-                <div class="text-slate-600 dark:text-slate-200 ck-content">{!! BaseHelper::clean($property->content) !!}</div>
-
-                @if ($property->features->count())
-                    <h5 class="pt-5 mb-5 pb-2 text-xl font-bold border-b border-gray-300 dark:border-gray-700">{{ __('Features') }}</h5>
-                    <div class="grid gap-4 lg:grid-cols-3 sm:grid-cols-1">
-                        @foreach($property->features as $feature)
-                            <li class="flex items-center col-span-1 me-4 lg:me-6">
-                                <i class="{{ $feature->icon ?? 'mdi mdi-check' }} lg:text-3xl text-2xl me-2 text-primary"></i>
-                                <span class="lg:text-lg">{{ $feature->name }}</span>
-                            </li>
-                        @endforeach
-                    </div>
-                @endif
-
-                @if ($property->facilities->count())
-                    <h5 class="pt-5 mb-5 pb-2 text-xl font-bold border-b border-gray-300 dark:border-gray-700">{{ __('Distance key between facilities') }}</h5>
-                    <div class="grid gap-4 lg:grid-cols-3 sm:grid-cols-1">
-                        @foreach($property->facilities as $facility)
-                            <li class="flex items-center col-span-1 me-4 lg:me-6">
-                                @if ($facility->getMetaData('icon_image', true))
-                                    <p><i><img src="{{ RvMedia::getImageUrl($facility->getMetaData('icon_image', true)) }}" alt="{{ $facility->name }}" style="vertical-align: top; margin-top: 3px;" width="18" height="18"></i> {{ $facility->name }} - {{ $facility->pivot->distance }}</p>
-                                @else
-                                    <i class="@if ($facility->icon) {{ $facility->icon }} @else mdi mdi-check @endif lg:text-3xl text-2xl me-2 text-primary"></i>
-                                    <span class="lg:text-lg">{{ $facility->name }} - {{ $facility->pivot->distance }}</span>
-                                @endif
-                            </li>
-                        @endforeach
-                    </div>
-                @endif
-
-                {{-- @if ($property->project_id && $project = $property->project)
-                    <h5 class="pt-5 mb-5 pb-2 text-xl font-bold border-b border-gray-300 dark:border-gray-700">{{ __("Project's information") }}</h5>
-                    <div class="grid gap-4 md:grid-cols-5 sm:grid-cols-1">
-                        <div class="mt-4 md:col-span-2 lg:col-span-2 sm:w-full">
-                            <img class="rounded md:h-40 md:w-80 sm:w-full sm:h-full" src="{{ RvMedia::getImageUrl($project->image, null, false, RvMedia::getDefaultImage()) }}" alt="{{ $project->name }}">
-                        </div>
-                        <div class="md:col-span-3 lg:col-span-3 sm:w-full sm:mt-3">
-                            <a href="{{ $project->url }}"><p class="mb-1 text-xl font-bold">{!! BaseHelper::clean($project->name) !!}</p></a>
-                            <div class="mb-1 text-gray-500 dark:text-gray-300">{!! BaseHelper::clean(Str::limit($project->description, 180)) !!}</div>
-                            <a href="{{ $project->url }}" class="text-white btn bg-primary hover:bg-secondary">{{ __('View project') }}</a>
-                        </div>
-                    </div>
-                @endif --}}
-
-                @if ($property->latitude && $property->longitude)
-                    <h5 class="pt-5 mb-5 pb-2 text-xl font-bold border-b border-gray-300 dark:border-gray-700">{{ __('Location') }}</h5>
-                    <div class="box-map property-street-map-container">
-                        <div class="property-street-map"
-                             data-popup-id="#street-map-popup-template"
-                             data-center="{{ json_encode([$property->latitude, $property->longitude]) }}"
-                             data-map-icon="{{ $property->type->label() }}: {{ $property->price_html }}"
-                             style="height: 300px;"
-                        >
-                            <div class="hidden property-template-popup-map">
-                                <table width="100%">
-                                    <tr>
-                                        <td width="90">
-                                            <div class="blii"><img src="{{ $property->image_thumb }}" width="80" alt="{{ $property->name }}">
-                                                <div class="status">{!! BaseHelper::clean($property->status_html) !!}</div>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <div class="infomarker text-start">
-                                                <h5><a href="{{ $property->url }}" target="_blank">{!! BaseHelper::clean($property->name) !!}</a></h5>
-                                                <div class="text-info"><strong>{{ $property->price_html }}</strong></div>
-                                                <div>{{ $property->city_name }}</div>
-                                                <div class="ltr:flex">
-                                                    <span> {{ $property->square_text }}</span>
-                                                    <span class="px-2">
-                                                        <i class="mdi mdi-bed-empty"></i>
-                                                        <i>{{ $property->number_bedroom }}</i>
-                                                    </span >
-                                                    <span>
-                                                        <i class="mdi mdi-shower"></i>
-                                                        <i>{{ $property->number_bathroom }}</i>
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                </table>
+    {{-- Property Details --}}
+    <div class="container mx-auto px-4 py-8">
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h1 class="text-3xl font-bold text-gray-900 mb-4">{{ $property->name }}</h1>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <h2 class="text-xl font-semibold mb-3">Property Details</h2>
+                    
+                    <div class="space-y-2">
+                        @if ($property->city_id)
+                            <div class="flex items-center">
+                                <i class="mdi mdi-map-marker-outline text-blue-500 mr-2"></i>
+                                <span>{{ $property->city->name }}</span>
                             </div>
-                        </div>
-                    </div>
-                @endif
-            </div>
-
-            <div class="px-3 mt-8 lg:w-1/3 md:w-1/2 md:p-4 md:mt-0">
-                <div class="sticky top-20">
-                    <div class="mb-6 rounded-md shadow bg-slate-50 dark:bg-slate-800 dark:shadow-gray-700">
-                        <div class="p-6">
-                            <h5 class="text-2xl font-medium">{{ __('Price:') }}</h5>
-
-                            <div class="flex items-center justify-between mt-4">
-                                <span class="text-xl font-medium">{{ $property->price_html }}</span>
-
-                                <span class="bg-primary/10 text-primary text-sm px-2.5 py-0.75 rounded h-6">{{ $property->type->label() }}</span>
+                        @endif
+                        
+                        @if ($property->number_bedroom)
+                            <div class="flex items-center">
+                                <i class="mdi mdi-bed-empty text-blue-500 mr-2"></i>
+                                <span>{{ number_format($property->number_bedroom) }} Bedrooms</span>
                             </div>
-
-                            <ul class="mx-0 mt-4 mb-0 list-none">
-                                @if ($uniqueId = $property->unique_id)
-                                    <li class="flex items-center justify-between">
-                                        <span class="text-sm text-slate-400">{{ __('ID') }}</span>
-                                        <span class="text-sm font-medium">{{ $uniqueId }}</span>
-                                    </li>
-                                @endif
-
-                                @if ($property->square)
-                                    <li class="flex items-center justify-between mt-2">
-                                        <span class="text-sm text-slate-400">{{ __('Square') }}</span>
-                                        <span class="text-sm font-medium">{{ $property->square_text }}</span>
-                                    </li>
-                                @endif
-
-                                @if ($bedrooms = $property->number_bedroom)
-                                    <li class="flex items-center justify-between mt-2">
-                                        <span class="text-sm text-slate-400">{{ __('Number of bedrooms') }}</span>
-                                        <span class="text-sm font-medium">{{ $bedrooms }}</span>
-                                    </li>
-                                @endif
-
-                                @if ($bathrooms = $property->number_bathroom)
-                                    <li class="flex items-center justify-between mt-2">
-                                        <span class="text-sm text-slate-400">{{ __('Number of bathrooms') }}</span>
-                                        <span class="text-sm font-medium">{{ $bathrooms }}</span>
-                                    </li>
-                                @endif
-
-                                @if ($floors = $property->number_floor)
-                                    <li class="flex items-center justify-between mt-2">
-                                        <span class="text-sm text-slate-400">{{ __('Number of floors') }}</span>
-                                        <span class="text-sm font-medium">{{ $floors }}</span>
-                                    </li>
-                                @endif
-
-                                @if(RealestateHelper::isEnabledCustomFields())
-                                    @foreach($property->customFields as $customField)
-                                        @if($customField->name != 'youtube_url')
-                                            <li class="flex items-center justify-between mt-2">
-                                                <span class="text-sm text-slate-400">{!! BaseHelper::clean($customField->name) !!}</span>
-                                                <span class="text-sm font-medium">{!! BaseHelper::clean($customField->value) !!}</span>
-                                            </li>
-                                        @endif
-                                    @endforeach
-                                @endif
-                                {!! apply_filters('property_details_extra_info', null, $property) !!}
-                            </ul>
-                        </div>
-                    </div>
-
-                    <div class="mb-6 rounded-md shadow bg-slate-50 dark:bg-slate-800 dark:shadow-gray-700">
-                        {!! Theme::partial('consult-form', ['type' => 'property', 'data' => $property]) !!}
-                    </div>
-
-                    <div class="mt-12 text-center">
-                        {!! dynamic_sidebar('property_sidebar') !!}
+                        @endif
+                        
+                        @if ($property->number_bathroom)
+                            <div class="flex items-center">
+                                <i class="mdi mdi-shower text-blue-500 mr-2"></i>
+                                <span>{{ number_format($property->number_bathroom) }} Bathrooms</span>
+                            </div>
+                        @endif
+                        
+                        @if ($property->square)
+                            <div class="flex items-center">
+                                <i class="mdi mdi-arrow-expand-all text-blue-500 mr-2"></i>
+                                <span>{{ $property->square_text }}</span>
+                            </div>
+                        @endif
                     </div>
                 </div>
+                
+                <div>
+                    <h2 class="text-xl font-semibold mb-3">Price Information</h2>
+                    <div class="text-2xl font-bold text-blue-600">{{ $property->price_html }}</div>
+                    
+                    @if($property->author)
+                        <div class="mt-6">
+                            <h3 class="font-semibold mb-2">Agent Information</h3>
+                            <div class="flex items-center">
+                                <img src="{{ $property->author->avatar_url }}" 
+                                     class="w-12 h-12 rounded-full mr-3" 
+                                     alt="{{ $property->author->name }}">
+                                <div>
+                                    <div class="font-medium">{{ $property->author->name }}</div>
+                                    @if($property->author->phone)
+                                        <div class="text-gray-600">{{ $property->author->phone }}</div>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                    @endif
+                </div>
             </div>
+            
+            @if ($property->description)
+                <div class="mt-8">
+                    <h2 class="text-xl font-semibold mb-3">Description</h2>
+                    <div class="prose max-w-none text-gray-700">
+                        {!! BaseHelper::clean($property->description) !!}
+                    </div>
+                </div>
+            @endif
+
+            @if ($property->features->count())
+                <div class="mt-8">
+                    <h2 class="text-xl font-semibold mb-3">Property Features</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                        @foreach($property->features as $feature)
+                            <div class="flex items-center">
+                                @if($feature->icon)
+                                    <i class="{{ $feature->icon }} text-blue-500 mr-2"></i>
+                                @endif
+                                <span>{{ $feature->name }}</span>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
         </div>
-
-        @if(RealEstateHelper::isEnabledReview())
-            @include(Theme::getThemeNamespace('views.real-estate.partials.reviews'), ['model' => $property])
-        @endif
-
-        @if ($relatedProperties->count())
-            <div class="mx-3 mt-10 mb-5">
-                <h5 class="text-xl font-bold border-b border-gray-300 dark:border-gray-700 pb-2">{{ __('Related properties') }}</h5>
-                {!! Theme::partial('real-estate.properties.items', ['properties' => $relatedProperties]) !!}
-            </div>
-        @endif
     </div>
-</section>
+</div>
+
+</body>
+</html>
